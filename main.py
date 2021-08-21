@@ -12,17 +12,6 @@ bot = Bot(config.TOKEN)
 dp = Dispatcher(bot)
 
 
-@dp.message_handler(commands=['help'])
-async def helper(message):
-    await message.answer("Начать новую игру - /start\n\n"
-                         "Посмотреть решение - /answer\n\n"
-                         "Очистить поле - /clear\n\n"
-                         "Ввести изменение - *A4 8* (буквы латиницей)\n"
-                         "(*A* - столбик, *4* - рядочек, 8 - число)\n\n"
-                         "Удаление числа - *A4 0*\n\n"
-                         "Правила в описании :)\n\n"
-                         "Поддержать пилупу - _4441114447909910_", parse_mode='Markdown')
-
 
 @dp.message_handler(commands=['db'])
 async def db_sender(message):
@@ -32,6 +21,23 @@ async def db_sender(message):
 
 
 @dp.message_handler(commands=['start'])
+async def helper(message):
+    await message.answer("Начать новую игру - /game\n\n"
+                         "Ввести изменение - *A4 8* (буквы латиницей)\n"
+                         "(*A* - столбик, *4* - рядочек, 8 - число)\n\n"
+                         "Удаление числа - *A4 0*\n\n"
+                         "Посмотреть решение - /answer\n\n"
+                         "Очистить поле - /clear\n\n"
+                         "Правила судоку - /help\n\n"
+                         "Поддержать пилупу - _4441114447909910_", parse_mode='Markdown')
+
+
+@dp.message_handler(commands=['help'])
+async def helper(message):
+    await message.answer("http://surl.li/xhnz")
+
+
+@dp.message_handler(commands=['game'])
 async def started_field(message):
 
     # this function sends starter field for sudoku
@@ -212,7 +218,7 @@ async def callback_inline(call):
 
 
 async def set_commands(dp):
-    await bot.set_my_commands([types.BotCommand("/start", "начать"), types.BotCommand("/help", "помощь"),
+    await bot.set_my_commands([types.BotCommand("/game", "новая игра"), types.BotCommand("/help", "помощь"),
                                types.BotCommand("/answer", "решение"), types.BotCommand("/clear", "очистить поле")])
 
 
