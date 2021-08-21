@@ -8,8 +8,7 @@ from generator_sudoku import generator_sudoku, sudoku_solver
 from matrix_filling import sudoku_drawer
 import config
 
-# bot = Bot(config.TOKEN)
-bot = Bot('1855055611:AAEzo7YkRduoNsryrRpA42kuMztarZN7gr0')
+bot = Bot(config.TOKEN)
 dp = Dispatcher(bot)
 
 
