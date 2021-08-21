@@ -218,8 +218,9 @@ async def callback_inline(call):
 
 
 async def set_commands(dp):
-    await bot.set_my_commands([types.BotCommand("/game", "новая игра"), types.BotCommand("/help", "помощь"),
-                               types.BotCommand("/answer", "решение"), types.BotCommand("/clear", "очистить поле")])
+    await bot.set_my_commands([types.BotCommand("/start", "начать"), types.BotCommand("/game", "новая игра"),
+                               types.BotCommand("/help", "правила"), types.BotCommand("/answer", "решение"),
+                               types.BotCommand("/clear", "очистить поле")])
 
 
 if __name__ == '__main__':
