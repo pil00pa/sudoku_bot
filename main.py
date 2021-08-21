@@ -8,7 +8,8 @@ from generator_sudoku import generator_sudoku, sudoku_solver
 from matrix_filling import sudoku_drawer
 import config
 
-bot = Bot(config.TOKEN)
+# bot = Bot(config.TOKEN)
+bot = Bot('1855055611:AAEzo7YkRduoNsryrRpA42kuMztarZN7gr0')
 dp = Dispatcher(bot)
 
 
@@ -20,15 +21,17 @@ async def db_sender(message):
 
 
 @dp.message_handler(commands=['start'])
-async def helper(message):
+async def starter(message):
+    item = InlineKeyboardButton("🧠 Начать игру", callback_data='NewGame')
+    markup = InlineKeyboardMarkup().add(item)
     await message.answer("Начать новую игру - /game\n\n"
                          "Ввести изменение - *A4 8* (буквы латиницей)\n"
-                         "(*A* - столбик, *4* - рядочек, 8 - число)\n\n"
+                         "*A* - столбик, *4* - рядочек, 8 - число\n\n"
                          "Удаление числа - *A4 0*\n\n"
                          "Посмотреть решение - /answer\n\n"
                          "Очистить поле - /clear\n\n"
                          "Правила судоку - /help\n\n"
-                         "Поддержать пилупу - _4441114447909910_", parse_mode='Markdown')
+                         "Поддержать пилупу - _4441114447909910_", parse_mode='Markdown', reply_markup=markup)
 
 
 @dp.message_handler(commands=['help'])
@@ -64,8 +67,8 @@ async def started_field(message):
         cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
         connect.commit()
     else:
-        item1 = InlineKeyboardButton("да", callback_data='start_True')
-        item2 = InlineKeyboardButton("нет", callback_data='start_False')
+        item1 = InlineKeyboardButton("да", callback_data='game_True')
+        item2 = InlineKeyboardButton("нет", callback_data='game_False')
         markup = InlineKeyboardMarkup().add(item1, item2)
         await message.answer("хочешь начать заново?", reply_markup=markup)
     connect.close()
@@ -136,7 +139,9 @@ async def tab_change(message):
                 cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
                 connect.commit()
                 if sudoku == sudoku_solver(starter_tab):
-                    await message.reply('Победа!')
+                    item = InlineKeyboardButton("✏️Начать новую игру", callback_data='NewGame')
+                    markup = InlineKeyboardMarkup().add(item)
+                    await message.reply('Победа!', reply_markup=markup)
                     cursor.execute(f"DELETE FROM sudoku_users WHERE id = {message.chat.id}")
                     connect.commit()
         connect.close()
@@ -149,7 +154,7 @@ async def callback_inline(call):
     if call.data == 'deception_False':
         await bot.send_message(call.from_user.id, "случайность, со всеми бывает")
 
-    if call.data == 'start_True':
+    if call.data == 'game_True':
         connect = sqlite3.connect('users.db')
         cursor = connect.cursor()
 
@@ -169,7 +174,7 @@ async def callback_inline(call):
 
         connect.commit()
         connect.close()
-    if call.data == 'start_False':
+    if call.data == 'game_False':
         await bot.send_message(call.from_user.id, "будь осторежнее")
 
     if call.data == 'answer_True':
@@ -211,6 +216,9 @@ async def callback_inline(call):
         await bot.delete_message(call.message.chat.id, last_message_id)
     if call.data == 'clear_False':
         await bot.send_message(call.from_user.id, "тогда продолжай")
+
+    if call.data == 'NewGame':
+        await started_field(call.message)
 
     await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                 text=call.message.text)
