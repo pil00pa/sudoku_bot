@@ -1,5 +1,4 @@
 from random import randrange
-from copy import deepcopy
 
 
 def transposing(matrix):
@@ -49,4 +48,3 @@ def generator_completed_sudoku():
         elif j == 3:
             swap_rows_area(table)
     return table
-

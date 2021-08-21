@@ -8,7 +8,8 @@ from generator_sudoku import generator_sudoku, sudoku_solver
 from matrix_filling import sudoku_drawer
 import config
 
-bot = Bot(config.TOKEN)
+# bot = Bot(config.TOKEN)
+bot = Bot('1855055611:AAEzo7YkRduoNsryrRpA42kuMztarZN7gr0')
 dp = Dispatcher(bot)
 
 
@@ -17,7 +18,7 @@ async def helper(message):
     await message.answer("Начать новую игру - /start\n\n"
                          "Посмотреть решение - /answer\n\n"
                          "Очистить поле - /clear\n\n"
-                         "Изменения присылай в таком формате - *A4 8*(буквы латиницей)\n"
+                         "Ввести изменение - *A4 8*(буквы латиницей)\n"
                          "(*A* - столбик, *4* - рядочек, 8 - число)\n\n"
                          "Удаление числа - *A4 0*\n\n"
                          "Правила в описании :)\n\n"
@@ -28,7 +29,7 @@ async def helper(message):
 async def db_sender(message):
     if message.from_user.id == 484620905:
         with open('users.db', 'rb') as file:
-            await bot.send_document(message.chat.id, ('sudoku.db', file))
+            await bot.send_document(message.chat.id, ('users.db', file))
 
 
 @dp.message_handler(commands=['start'])

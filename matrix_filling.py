@@ -23,4 +23,3 @@ def sudoku_drawer(sudoku, starter_tab):
         row_index += 1
         sud_tab.save(config.TABLE)
     return 0
-
