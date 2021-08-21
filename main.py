@@ -150,9 +150,9 @@ async def tab_change(message):
 @dp.callback_query_handler()
 async def callback_inline(call):
     if call.data == 'deception_True':
-        await bot.send_message(call.from_user.id, "у тебя ничего не выйдет")
+        await bot.send_message(call.message.chat.id, "у тебя ничего не выйдет")
     if call.data == 'deception_False':
-        await bot.send_message(call.from_user.id, "случайность, со всеми бывает")
+        await bot.send_message(call.message.chat.id, "случайность, со всеми бывает")
 
     if call.data == 'game_True':
         connect = sqlite3.connect('users.db')
@@ -175,7 +175,7 @@ async def callback_inline(call):
         connect.commit()
         connect.close()
     if call.data == 'game_False':
-        await bot.send_message(call.from_user.id, "будь осторежнее")
+        await bot.send_message(call.message.chat.id, "будь осторежнее")
 
     if call.data == 'answer_True':
         connect = sqlite3.connect('users.db')
@@ -193,7 +193,7 @@ async def callback_inline(call):
         connect.commit()
         connect.close()
     if call.data == 'answer_False':
-        await bot.send_message(call.from_user.id, "хорошо что я спросил")
+        await bot.send_message(call.message.chat.id, "хорошо что я спросил")
 
     if call.data == 'clear_True':
         connect = sqlite3.connect('users.db')
@@ -215,7 +215,7 @@ async def callback_inline(call):
         connect.close()
         await bot.delete_message(call.message.chat.id, last_message_id)
     if call.data == 'clear_False':
-        await bot.send_message(call.from_user.id, "тогда продолжай")
+        await bot.send_message(call.message.chat.id, "тогда продолжай")
 
     if call.data == 'NewGame':
         await started_field(call.message)
