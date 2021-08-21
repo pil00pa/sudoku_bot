@@ -12,7 +12,6 @@ bot = Bot(config.TOKEN)
 dp = Dispatcher(bot)
 
 
-
 @dp.message_handler(commands=['db'])
 async def db_sender(message):
     if message.from_user.id == 484620905:
@@ -219,8 +218,8 @@ async def callback_inline(call):
 
 async def set_commands(dp):
     await bot.set_my_commands([types.BotCommand("/start", "начать"), types.BotCommand("/game", "новая игра"),
-                               types.BotCommand("/help", "правила"), types.BotCommand("/answer", "решение"),
-                               types.BotCommand("/clear", "очистить поле")])
+                               types.BotCommand("/clear", "очистить поле"), types.BotCommand("/answer", "решение"),
+                               types.BotCommand("/help", "правила")])
 
 
 if __name__ == '__main__':
