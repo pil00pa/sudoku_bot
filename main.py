@@ -8,6 +8,7 @@ from generator_sudoku import generator_sudoku, sudoku_solver
 from matrix_filling import sudoku_drawer
 import config
 
+
 bot = Bot(config.TOKEN)
 dp = Dispatcher(bot)
 
@@ -21,12 +22,13 @@ async def db_sender(message):
 
 @dp.message_handler(commands=['start'])
 async def starter(message):
-    item = InlineKeyboardButton("🧠 Начать игру", callback_data='NewGame')
+    item = InlineKeyboardButton("✏️Начать игру", callback_data='NewGame')
     markup = InlineKeyboardMarkup().add(item)
     await message.answer("Начать новую игру - /game\n\n"
-                         "Ввести изменение - *A4 8* (буквы латиницей)\n"
-                         "*A* - столбик, *4* - рядочек, 8 - число\n\n"
-                         "Удаление числа - *A4 0*\n\n"
+                         "Все буквы латиницей!\n"
+                         "Ввести изменение - *A4 8*\n"
+                         "*A* - столбик, *4* - рядочек, *8* - цифра\n\n"
+                         "Удалить цифру - *A4 0*\n\n"
                          "Посмотреть решение - /answer\n\n"
                          "Очистить поле - /clear\n\n"
                          "Правила судоку - /help\n\n"
