@@ -22,10 +22,10 @@ async def db_sender(message):
 
 @dp.message_handler(commands=['start'])
 async def starter(message):
-    item = InlineKeyboardButton("✏️Начать игру", callback_data='NewGame')
+    item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
     markup = InlineKeyboardMarkup().add(item)
     await message.answer("Начать новую игру - /game\n\n"
-                         "Все буквы латиницей!\n"
+                         "Все буквы латиницей!\n\n"
                          "Ввести изменение - *A4 8*\n"
                          "*A* - столбик, *4* - рядочек, *8* - цифра\n\n"
                          "Удалить цифру - *A4 0*\n\n"
@@ -140,7 +140,7 @@ async def tab_change(message):
                 cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
                 connect.commit()
                 if sudoku == sudoku_solver(starter_tab):
-                    item = InlineKeyboardButton("✏️Начать новую игру", callback_data='NewGame')
+                    item = InlineKeyboardButton("✏️ Начать новую игру", callback_data='NewGame')
                     markup = InlineKeyboardMarkup().add(item)
                     await message.reply('Победа!', reply_markup=markup)
                     cursor.execute(f"DELETE FROM sudoku_users WHERE id = {message.chat.id}")
