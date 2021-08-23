@@ -238,7 +238,7 @@ async def callback_inline(call):
         await started_field(call.message)
 
     await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                text=call.message.text)
+                                text=call.message.text, parse_mode='Markdown')
 
 
 async def set_commands(dp):
