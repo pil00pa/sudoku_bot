@@ -8,8 +8,8 @@ from generator_sudoku import generator_sudoku, sudoku_solver
 from matrix_filling import sudoku_drawer
 import config
 
-
-bot = Bot(config.TOKEN)
+bot = Bot('1855055611:AAEzo7YkRduoNsryrRpA42kuMztarZN7gr0')
+# bot = Bot(config.TOKEN)
 dp = Dispatcher(bot)
 
 
@@ -26,9 +26,9 @@ async def starter(message):
     markup = InlineKeyboardMarkup().add(item)
     await message.answer("Начать новую игру - /game\n\n"
                          "Все буквы латиницей!\n\n"
-                         "Ввести изменение - *A4 8*\n"
-                         "*A* - столбик, *4* - рядочек, *8* - цифра\n\n"
-                         "Удалить цифру - *A4 0*\n\n"
+                         "Ввести изменение - *G4 8*\n"
+                         "*G* - столбик, *4* - рядочек, *8* - цифра\n\n"
+                         "Удалить цифру - *G4 0*\n\n"
                          "Посмотреть решение - /answer\n\n"
                          "Очистить поле - /clear\n\n"
                          "Правила судоку - /help\n\n"
@@ -82,13 +82,17 @@ async def answer(message):
     cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {message.chat.id}")
     data = cursor.fetchall()
     connect.commit()
+    connect.close()
 
     if data != []:
         item1 = InlineKeyboardButton("да", callback_data='answer_True')
         item2 = InlineKeyboardButton("нет", callback_data='answer_False')
         markup = InlineKeyboardMarkup().add(item1, item2)
         await message.answer("хочешь узнать ответ?", reply_markup=markup)
-    connect.close()
+    else:
+        item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
+        markup = InlineKeyboardMarkup().add(item)
+        await message.answer("Ты не начал игру 😢", reply_markup=markup)
 
 
 @dp.message_handler(commands=['clear'])
@@ -105,6 +109,10 @@ async def clear_field(message):
         item2 = InlineKeyboardButton("нет", callback_data='clear_False')
         markup = InlineKeyboardMarkup().add(item1, item2)
         await message.answer("хочешь очистить поле?", reply_markup=markup)
+    else:
+        item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
+        markup = InlineKeyboardMarkup().add(item)
+        await message.answer("Ты не начал игру", reply_markup=markup)
 
 
 @dp.message_handler(content_types=['text'])
