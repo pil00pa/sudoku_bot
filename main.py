@@ -8,8 +8,7 @@ from generator_sudoku import generator_sudoku, sudoku_solver
 from matrix_filling import sudoku_drawer
 import config
 
-bot = Bot('1855055611:AAEzo7YkRduoNsryrRpA42kuMztarZN7gr0')
-# bot = Bot(config.TOKEN)
+bot = Bot(config.TOKEN)
 dp = Dispatcher(bot)
 
 
@@ -22,6 +21,15 @@ async def db_sender(message):
 
 @dp.message_handler(commands=['start'])
 async def starter(message):
+    connect = sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    cursor.execute(f"SELECT id FROM chats_id WHERE id = {message.chat.id}")
+    data = cursor.fetchone()
+    if data is None:
+        cursor.execute("INSERT INTO chats_id VALUES(?);", [message.chat.id])
+    connect.commit()
+    connect.close()
+
     item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
     markup = InlineKeyboardMarkup().add(item)
     await message.answer("Начать новую игру - /game\n\n"
@@ -150,7 +158,7 @@ async def tab_change(message):
                 if sudoku == sudoku_solver(starter_tab):
                     item = InlineKeyboardButton("✏️ Начать новую игру", callback_data='NewGame')
                     markup = InlineKeyboardMarkup().add(item)
-                    await message.reply('Победа!', reply_markup=markup)
+                    await message.answer('*Победа!*', reply_markup=markup, parse_mode='Markdown')
                     cursor.execute(f"DELETE FROM sudoku_users WHERE id = {message.chat.id}")
                     connect.commit()
         connect.close()
