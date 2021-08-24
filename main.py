@@ -30,8 +30,7 @@ async def starter(message):
     connect.commit()
     connect.close()
 
-    item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
-    markup = InlineKeyboardMarkup().add(item)
+    markup = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame'))
     await message.answer("Начать новую игру - /game\n\n"
                          "Все буквы латиницей!\n\n"
                          "Ввести изменение - *G4 8*\n"
@@ -40,12 +39,13 @@ async def starter(message):
                          "Посмотреть решение - /answer\n\n"
                          "Очистить поле - /clear\n\n"
                          "Правила судоку - /help\n\n"
-                         "Поддержать пилупу - _4441114447909910_", parse_mode='Markdown', reply_markup=markup)
+                         "Поддержать проект - _4441114447909910_", parse_mode='Markdown', reply_markup=markup)
 
 
 @dp.message_handler(commands=['help'])
 async def helper(message):
-    await message.answer("http://surl.li/xhnz")
+    await message.answer("От игрока требуется заполнить свободные клетки цифрами от 1 до 9 так, чтобы в каждой строке, "
+                         "в каждом столбце и в каждом из 9 квадратов 3×3 все цифры встречалась бы единожды.")
 
 
 @dp.message_handler(commands=['game'])
@@ -78,7 +78,7 @@ async def started_field(message):
     else:
         item1 = InlineKeyboardButton("да", callback_data='game_True')
         item2 = InlineKeyboardButton("нет", callback_data='game_False')
-        markup = InlineKeyboardMarkup().add(item1, item2)
+        markup = InlineKeyboardMarkup(row_width=2).add(item1, item2)
         await message.answer("хочешь начать заново?", reply_markup=markup)
     connect.close()
 
@@ -87,40 +87,40 @@ async def started_field(message):
 async def answer(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {message.chat.id}")
-    data = cursor.fetchall()
+    cursor.execute(f"SELECT id FROM sudoku_users WHERE id = {message.chat.id}")
+    data = cursor.fetchone()
     connect.commit()
     connect.close()
 
-    if data != []:
+    if data is None:
+        item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
+        markup = InlineKeyboardMarkup(row_width=1).add(item)
+        await message.answer("Ты не начал игру 😢", reply_markup=markup)
+    else:
         item1 = InlineKeyboardButton("да", callback_data='answer_True')
         item2 = InlineKeyboardButton("нет", callback_data='answer_False')
-        markup = InlineKeyboardMarkup().add(item1, item2)
+        markup = InlineKeyboardMarkup(row_width=2).add(item1, item2)
         await message.answer("хочешь узнать ответ?", reply_markup=markup)
-    else:
-        item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
-        markup = InlineKeyboardMarkup().add(item)
-        await message.answer("Ты не начал игру 😢", reply_markup=markup)
 
 
 @dp.message_handler(commands=['clear'])
 async def clear_field(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {message.chat.id}")
-    data = cursor.fetchall()
+    cursor.execute(f"SELECT id FROM sudoku_users WHERE id = {message.chat.id}")
+    data = cursor.fetchone()
     connect.commit()
     connect.close()
 
-    if data != []:
+    if data is None:
+        item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
+        markup = InlineKeyboardMarkup(row_width=1).add(item)
+        await message.answer("Ты не начал игру", reply_markup=markup)
+    else:
         item1 = InlineKeyboardButton("да", callback_data='clear_True')
         item2 = InlineKeyboardButton("нет", callback_data='clear_False')
-        markup = InlineKeyboardMarkup().add(item1, item2)
+        markup = InlineKeyboardMarkup(row_width=2).add(item1, item2)
         await message.answer("хочешь очистить поле?", reply_markup=markup)
-    else:
-        item = InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame')
-        markup = InlineKeyboardMarkup().add(item)
-        await message.answer("Ты не начал игру", reply_markup=markup)
 
 
 @dp.message_handler(content_types=['text'])
@@ -128,10 +128,9 @@ async def tab_change(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
     cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {message.chat.id}")
-    data = cursor.fetchall()
+    user_info = cursor.fetchone()
     connect.commit()
-    if data != []:
-        user_info = data[0]
+    if user_info is not None:
         starter_tab, sudoku, last_message_id = eval(user_info[1]), eval(user_info[2]), int(user_info[3])
         text = message.text
         if (text[0] in ascii_letters) and text[1].isdigit() and (text[2] == ' ') and text[3].isdigit() \
@@ -142,7 +141,7 @@ async def tab_change(message):
             if starter_tab[row][column] != 0:
                 item1 = InlineKeyboardButton('да', callback_data='deception_True')
                 item2 = InlineKeyboardButton("нет", callback_data='deception_False')
-                markup = InlineKeyboardMarkup().add(item1, item2)
+                markup = InlineKeyboardMarkup(row_width=2).add(item1, item2)
                 await message.answer("хочешь меня надурить?", reply_markup=markup)
             else:
                 sudoku[row][column] = num
@@ -156,8 +155,8 @@ async def tab_change(message):
                 cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
                 connect.commit()
                 if sudoku == sudoku_solver(starter_tab):
-                    item = InlineKeyboardButton("✏️ Начать новую игру", callback_data='NewGame')
-                    markup = InlineKeyboardMarkup().add(item)
+                    markup = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("✏️ Начать новую игру",
+                                                                                        callback_data='NewGame'))
                     await message.answer('*Победа!*', reply_markup=markup, parse_mode='Markdown')
                     cursor.execute(f"DELETE FROM sudoku_users WHERE id = {message.chat.id}")
                     connect.commit()
@@ -198,7 +197,7 @@ async def callback_inline(call):
         connect = sqlite3.connect('users.db')
         cursor = connect.cursor()
         cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {call.message.chat.id}")
-        user_info = cursor.fetchall()[0]
+        user_info = cursor.fetchone()
         connect.commit()
 
         starter_tab, last_message_id = eval(user_info[1]), int(user_info[3])
@@ -216,7 +215,7 @@ async def callback_inline(call):
         connect = sqlite3.connect('users.db')
         cursor = connect.cursor()
         cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {call.message.chat.id}")
-        user_info = cursor.fetchall()[0]
+        user_info = cursor.fetchone()
         connect.commit()
 
         starter_tab, sudoku, last_message_id = eval(user_info[1]), eval(user_info[2]), int(user_info[3])
@@ -237,8 +236,8 @@ async def callback_inline(call):
     if call.data == 'NewGame':
         await started_field(call.message)
 
-    await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                text=call.message.text, parse_mode='Markdown')
+    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        reply_markup=None)
 
 
 async def set_commands(dp):
