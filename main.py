@@ -177,7 +177,7 @@ async def callback_inline(call):
         cursor.execute(f"DELETE FROM sudoku_users WHERE id = {call.message.chat.id}")
 
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, 50)
+        sudoku = generator_sudoku(solved_sudoku, 35)
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
