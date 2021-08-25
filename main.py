@@ -64,7 +64,7 @@ async def started_field(message):
     connect.commit()
     if data is None:
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, 50)
+        sudoku = generator_sudoku(solved_sudoku, 35)
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
