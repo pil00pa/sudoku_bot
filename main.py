@@ -1,5 +1,6 @@
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.exceptions import MessageCantBeDeleted
 import sqlite3
 from copy import deepcopy
 from string import ascii_letters
@@ -23,10 +24,10 @@ async def db_sender(message):
 async def starter(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT id FROM chats_id WHERE id = {message.chat.id}")
+    cursor.execute(f"SELECT id FROM id_n_dif WHERE id = {message.chat.id}")
     data = cursor.fetchone()
     if data is None:
-        cursor.execute("INSERT INTO chats_id VALUES(?);", [message.chat.id])
+        cursor.execute("INSERT INTO id_n_dif VALUES(?, ?);", [message.chat.id, 4])
     connect.commit()
     connect.close()
 
@@ -36,9 +37,10 @@ async def starter(message):
                          "Ввести изменение - *G4 8*\n"
                          "*G* - столбик, *4* - рядочек, *8* - цифра\n\n"
                          "Удалить цифру - *G4 0*\n\n"
-                         "Посмотреть решение - /answer\n\n"
-                         "Очистить поле - /clear\n\n"
-                         "Правила судоку - /help\n\n"
+                         "Поменять сложность - /change\_level\n"
+                         "Посмотреть решение - /answer\n"
+                         "Очистить поле - /clear\n"
+                         "Правила судоку - /rules\n\n"
                          "Поддержать проект - _4441114447909910_", parse_mode='Markdown', reply_markup=markup)
 
 
@@ -48,9 +50,33 @@ async def helper(message):
                          "в каждом столбце и в каждом из 9 квадратов 3×3 все цифры встречалась бы единожды.")
 
 
+@dp.message_handler(commands=['change_level'])
+async def level_changer(message):
+    level_1 = InlineKeyboardButton("1", callback_data='Level_1')
+    level_2 = InlineKeyboardButton("2", callback_data='Level_2')
+    level_3 = InlineKeyboardButton("3", callback_data='Level_3')
+    level_4 = InlineKeyboardButton("4", callback_data='Level_4')
+    level_5 = InlineKeyboardButton("5", callback_data='Level_5')
+    markup = InlineKeyboardMarkup(row_width=5).add(level_1, level_2, level_3, level_4, level_5)
+    await message.answer("Выбери уровень сложности", reply_markup=markup)
+
+
+@dp.callback_query_handler(lambda c: "Level" in c.data)
+async def callback_new_game(call):
+    connect = sqlite3.connect('users.db')
+    cursor = connect.cursor()
+    cursor.execute(f"DELETE FROM id_n_dif WHERE id = {call.message.chat.id}")
+    cursor.execute("INSERT INTO id_n_dif VALUES(?, ?);", [call.message.chat.id, int(call.data[-1]) - 1])
+    connect.commit()
+    connect.close()
+
+    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        reply_markup=None)
+    await call.message.answer('Уровень изменен ✅')
+
+
 @dp.message_handler(commands=['game'])
 async def started_field(message):
-
     # this function sends starter field for sudoku
     # and saves started tab, user tab, solved tab, user id and message id in database
 
@@ -59,12 +85,14 @@ async def started_field(message):
 
     # check id in database
 
-    cursor.execute(f"SELECT id FROM sudoku_users WHERE id = {message.chat.id}")
+    cursor.execute(f"SELECT id FROM users_info WHERE id = {message.chat.id}")
     data = cursor.fetchone()
     connect.commit()
     if data is None:
+        cursor.execute(f"SELECT dif FROM id_n_dif WHERE id = {message.chat.id}")
+        dif_lev = cursor.fetchone()[0]
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, 35)
+        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(16 + dif_lev * 10))
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
@@ -73,7 +101,7 @@ async def started_field(message):
             msg = await bot.send_photo(message.chat.id, file)
 
         user_info = (message.chat.id, str(starter_tab), str(sudoku), msg.message_id)
-        cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
+        cursor.execute("INSERT INTO users_info VALUES(?, ?, ?, ?);", user_info)
         connect.commit()
     else:
         item1 = InlineKeyboardButton("да", callback_data='game_True')
@@ -83,11 +111,48 @@ async def started_field(message):
     connect.close()
 
 
+@dp.callback_query_handler(lambda c: "game" in c.data)
+async def callback_game(call):
+    if call.data == 'game_True':
+        connect = sqlite3.connect('users.db')
+        cursor = connect.cursor()
+
+        cursor.execute(f"DELETE FROM users_info WHERE id = {call.message.chat.id}")
+        cursor.execute(f"SELECT dif FROM id_n_dif WHERE id = {call.message.chat.id}")
+        dif_lev = cursor.fetchone()[0]
+
+        solved_sudoku = generator_completed_sudoku()
+        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(16 + dif_lev * 10))
+        starter_tab = deepcopy(sudoku)
+
+        sudoku_drawer(sudoku, sudoku)
+
+        with open(config.TABLE, 'rb') as file:
+            msg = await bot.send_photo(call.message.chat.id, file)
+
+        user_info = (call.message.chat.id, str(starter_tab), str(sudoku), msg.message_id)
+        cursor.execute("INSERT INTO users_info VALUES(?, ?, ?, ?);", user_info)
+
+        connect.commit()
+        connect.close()
+    if call.data == 'game_False':
+        await bot.send_message(call.message.chat.id, "будь осторежнее")
+    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        reply_markup=None)
+
+
+@dp.callback_query_handler(lambda c: c.data == "NewGame")
+async def callback_new_game(call):
+    await started_field(call.message)
+    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        reply_markup=None)
+
+
 @dp.message_handler(commands=['answer'])
 async def answer(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT id FROM sudoku_users WHERE id = {message.chat.id}")
+    cursor.execute(f"SELECT id FROM users_info WHERE id = {message.chat.id}")
     data = cursor.fetchone()
     connect.commit()
     connect.close()
@@ -103,11 +168,34 @@ async def answer(message):
         await message.answer("хочешь узнать ответ?", reply_markup=markup)
 
 
+@dp.callback_query_handler(lambda c: "answer" in c.data)
+async def callback_answer(call):
+    if call.data == 'answer_True':
+        connect = sqlite3.connect('users.db')
+        cursor = connect.cursor()
+        cursor.execute(f"SELECT * FROM users_info WHERE id = {call.message.chat.id}")
+        user_info = cursor.fetchone()
+        connect.commit()
+
+        starter_tab, last_message_id = eval(user_info[1]), int(user_info[3])
+        sudoku_drawer(sudoku_solver(starter_tab), starter_tab)
+        with open(config.TABLE, 'rb') as file:
+            await bot.send_photo(call.message.chat.id, file)
+
+        cursor.execute(f"DELETE FROM users_info WHERE id = {call.message.chat.id}")
+        connect.commit()
+        connect.close()
+    if call.data == 'answer_False':
+        await bot.send_message(call.message.chat.id, "хорошо что я спросил")
+    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        reply_markup=None)
+
+
 @dp.message_handler(commands=['clear'])
 async def clear_field(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT id FROM sudoku_users WHERE id = {message.chat.id}")
+    cursor.execute(f"SELECT id FROM users_info WHERE id = {message.chat.id}")
     data = cursor.fetchone()
     connect.commit()
     connect.close()
@@ -123,11 +211,37 @@ async def clear_field(message):
         await message.answer("хочешь очистить поле?", reply_markup=markup)
 
 
+@dp.callback_query_handler(lambda c: "clear" in c.data)
+async def callback_clear(call):
+    if call.data == 'clear_True':
+        connect = sqlite3.connect('users.db')
+        cursor = connect.cursor()
+        cursor.execute(f"SELECT * FROM users_info WHERE id = {call.message.chat.id}")
+        user_info = cursor.fetchone()
+        connect.commit()
+
+        starter_tab, sudoku, last_message_id = eval(user_info[1]), eval(user_info[2]), int(user_info[3])
+        sudoku_drawer(starter_tab, starter_tab)
+        with open(config.TABLE, 'rb') as file:
+            msg = await bot.send_photo(call.message.chat.id, file)
+
+        cursor.execute(f"DELETE FROM users_info WHERE id = {call.message.chat.id}")
+
+        user_info = (call.message.chat.id, str(starter_tab), str(starter_tab), msg.message_id)
+        cursor.execute("INSERT INTO users_info VALUES(?, ?, ?, ?);", user_info)
+        connect.commit()
+        connect.close()
+    if call.data == 'clear_False':
+        await bot.send_message(call.message.chat.id, "тогда продолжай")
+    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        reply_markup=None)
+
+
 @dp.message_handler(content_types=['text'])
 async def tab_change(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {message.chat.id}")
+    cursor.execute(f"SELECT * FROM users_info WHERE id = {message.chat.id}")
     user_info = cursor.fetchone()
     connect.commit()
     if user_info is not None:
@@ -148,102 +262,38 @@ async def tab_change(message):
                 sudoku_drawer(sudoku, starter_tab)
                 with open(config.TABLE, 'rb') as file:
                     msg = await bot.send_photo(message.chat.id, file)
-                await bot.delete_message(message.chat.id, last_message_id)
-
-                cursor.execute(f"DELETE FROM sudoku_users WHERE id = {message.chat.id}")
+                try:
+                    await bot.delete_message(message.chat.id, last_message_id)
+                except MessageCantBeDeleted:
+                    pass
+                cursor.execute(f"DELETE FROM users_info WHERE id = {message.chat.id}")
                 user_info = (message.chat.id, str(starter_tab), str(sudoku), msg.message_id)
-                cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
+                cursor.execute("INSERT INTO users_info VALUES(?, ?, ?, ?);", user_info)
                 connect.commit()
                 if sudoku == sudoku_solver(starter_tab):
                     markup = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("✏️ Начать новую игру",
                                                                                         callback_data='NewGame'))
                     await message.answer('*Победа!*', reply_markup=markup, parse_mode='Markdown')
-                    cursor.execute(f"DELETE FROM sudoku_users WHERE id = {message.chat.id}")
+                    cursor.execute(f"DELETE FROM users_info WHERE id = {message.chat.id}")
                     connect.commit()
         connect.close()
 
 
-@dp.callback_query_handler()
-async def callback_inline(call):
+@dp.callback_query_handler(lambda c: "deception" in c.data)
+async def callback_deception(call):
     if call.data == 'deception_True':
         await bot.send_message(call.message.chat.id, "у тебя ничего не выйдет")
     if call.data == 'deception_False':
         await bot.send_message(call.message.chat.id, "случайность, со всеми бывает")
-
-    if call.data == 'game_True':
-        connect = sqlite3.connect('users.db')
-        cursor = connect.cursor()
-
-        cursor.execute(f"DELETE FROM sudoku_users WHERE id = {call.message.chat.id}")
-
-        solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, 35)
-        starter_tab = deepcopy(sudoku)
-
-        sudoku_drawer(sudoku, sudoku)
-
-        with open(config.TABLE, 'rb') as file:
-            msg = await bot.send_photo(call.message.chat.id, file)
-
-        user_info = (call.message.chat.id, str(starter_tab), str(sudoku), msg.message_id)
-        cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
-
-        connect.commit()
-        connect.close()
-    if call.data == 'game_False':
-        await bot.send_message(call.message.chat.id, "будь осторежнее")
-
-    if call.data == 'answer_True':
-        connect = sqlite3.connect('users.db')
-        cursor = connect.cursor()
-        cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {call.message.chat.id}")
-        user_info = cursor.fetchone()
-        connect.commit()
-
-        starter_tab, last_message_id = eval(user_info[1]), int(user_info[3])
-        sudoku_drawer(sudoku_solver(starter_tab), starter_tab)
-        with open(config.TABLE, 'rb') as file:
-            await bot.send_photo(call.message.chat.id, file)
-
-        cursor.execute(f"DELETE FROM sudoku_users WHERE id = {call.message.chat.id}")
-        connect.commit()
-        connect.close()
-    if call.data == 'answer_False':
-        await bot.send_message(call.message.chat.id, "хорошо что я спросил")
-
-    if call.data == 'clear_True':
-        connect = sqlite3.connect('users.db')
-        cursor = connect.cursor()
-        cursor.execute(f"SELECT * FROM sudoku_users WHERE id = {call.message.chat.id}")
-        user_info = cursor.fetchone()
-        connect.commit()
-
-        starter_tab, sudoku, last_message_id = eval(user_info[1]), eval(user_info[2]), int(user_info[3])
-        sudoku_drawer(starter_tab, starter_tab)
-        with open(config.TABLE, 'rb') as file:
-            msg = await bot.send_photo(call.message.chat.id, file)
-
-        cursor.execute(f"DELETE FROM sudoku_users WHERE id = {call.message.chat.id}")
-
-        user_info = (call.message.chat.id, str(starter_tab), str(sudoku), msg.message_id)
-        cursor.execute("INSERT INTO sudoku_users VALUES(?, ?, ?, ?);", user_info)
-        connect.commit()
-        connect.close()
-        await bot.delete_message(call.message.chat.id, last_message_id)
-    if call.data == 'clear_False':
-        await bot.send_message(call.message.chat.id, "тогда продолжай")
-
-    if call.data == 'NewGame':
-        await started_field(call.message)
-
     await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                         reply_markup=None)
 
 
 async def set_commands(dp):
     await bot.set_my_commands([types.BotCommand("/start", "начать"), types.BotCommand("/game", "новая игра"),
+                               types.BotCommand("/change_level", "поменять сложность"),
                                types.BotCommand("/clear", "очистить поле"), types.BotCommand("/answer", "решение"),
-                               types.BotCommand("/help", "правила")])
+                               types.BotCommand("/rules", "правила")])
 
 
 if __name__ == '__main__':

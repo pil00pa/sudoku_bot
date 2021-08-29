@@ -15,7 +15,7 @@ def sudoku_checker(matrix):
     return True
 
 
-def generator_sudoku(completed_sudoku, difficulty_level):
+def generator_sudoku(completed_sudoku, difficulty_level=40):
     sudoku = deepcopy(completed_sudoku)
     i = 0
     while i < difficulty_level:
@@ -30,3 +30,4 @@ def generator_sudoku(completed_sudoku, difficulty_level):
             else:
                 sudoku[row_index][column_index] = num
     return sudoku
+
