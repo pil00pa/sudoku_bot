@@ -44,7 +44,7 @@ async def starter(message):
                          "*Просто кладезь полезных ботов -* @ObzorchikPlus", parse_mode='Markdown', reply_markup=markup)
 
 
-@dp.message_handler(commands=['help'])
+@dp.message_handler(commands=['rules'])
 async def helper(message):
     await message.answer("От игрока требуется заполнить свободные клетки цифрами от 1 до 9 так, чтобы в каждой строке, "
                          "в каждом столбце и в каждом из 9 квадратов 3×3 все цифры встречалась бы единожды.")
