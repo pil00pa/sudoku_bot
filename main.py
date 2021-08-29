@@ -27,7 +27,7 @@ async def starter(message):
     cursor.execute(f"SELECT id FROM id_n_dif WHERE id = {message.chat.id}")
     data = cursor.fetchone()
     if data is None:
-        cursor.execute("INSERT INTO id_n_dif VALUES(?, ?);", [message.chat.id, 4])
+        cursor.execute("INSERT INTO id_n_dif VALUES(?, ?);", [message.chat.id, 2])
     connect.commit()
     connect.close()
 
@@ -41,7 +41,7 @@ async def starter(message):
                          "Посмотреть решение - /answer\n"
                          "Очистить поле - /clear\n"
                          "Правила судоку - /rules\n\n"
-                         "Поддержать проект - _4441114447909910_", parse_mode='Markdown', reply_markup=markup)
+                         "*Просто кладезь полезных ботов -* @ObzorchikPlus", parse_mode='Markdown', reply_markup=markup)
 
 
 @dp.message_handler(commands=['help'])
