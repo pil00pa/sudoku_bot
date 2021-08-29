@@ -92,7 +92,7 @@ async def started_field(message):
         cursor.execute(f"SELECT dif FROM id_n_dif WHERE id = {message.chat.id}")
         dif_lev = cursor.fetchone()[0]
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(15 + dif_lev * 10))
+        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(10 + dif_lev * 10))
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
@@ -122,7 +122,7 @@ async def callback_game(call):
         dif_lev = cursor.fetchone()[0]
 
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(15 + dif_lev * 10))
+        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(10 + dif_lev * 10))
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
