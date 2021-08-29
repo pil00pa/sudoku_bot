@@ -132,7 +132,7 @@ async def callback_game(call):
         dif_lev = cursor.fetchone()[0]
 
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(1 + dif_lev * 10))
+        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(15 + dif_lev * 10))
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
