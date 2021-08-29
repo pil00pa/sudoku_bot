@@ -24,10 +24,10 @@ async def db_sender(message):
 async def starter(message):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"SELECT id FROM id_n_dif WHERE id = {message.chat.id}")
+    cursor.execute(f"SELECT id FROM id_n_dif_n_wins WHERE id = {message.chat.id}")
     data = cursor.fetchone()
     if data is None:
-        cursor.execute("INSERT INTO id_n_dif VALUES(?, ?);", [message.chat.id, 2])
+        cursor.execute("INSERT INTO id_n_dif_n_wins VALUES(?, ?, ?);", [message.chat.id, 2, 0])
     connect.commit()
     connect.close()
 
@@ -42,6 +42,13 @@ async def starter(message):
                          "Очистить поле - /clear\n"
                          "Правила судоку - /rules\n\n"
                          "*Просто кладезь полезных ботов -* @ObzorchikPlus", parse_mode='Markdown', reply_markup=markup)
+
+
+@dp.callback_query_handler(lambda c: c.data == "NewGame")
+async def callback_new_game(call):
+    await started_field(call.message)
+    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                        reply_markup=None)
 
 
 @dp.message_handler(commands=['rules'])
@@ -65,14 +72,17 @@ async def level_changer(message):
 async def callback_new_game(call):
     connect = sqlite3.connect('users.db')
     cursor = connect.cursor()
-    cursor.execute(f"DELETE FROM id_n_dif WHERE id = {call.message.chat.id}")
-    cursor.execute("INSERT INTO id_n_dif VALUES(?, ?);", [call.message.chat.id, int(call.data[-1]) - 1])
+    cursor.execute(f"SELECT wins FROM id_n_dif_n_wins WHERE id = {call.message.chat.id}")
+    wins = cursor.fetchone()[0]
+    cursor.execute(f"DELETE FROM id_n_dif_n_wins WHERE id = {call.message.chat.id}")
+    cursor.execute("INSERT INTO id_n_dif_n_wins VALUES(?, ?, ?);", [call.message.chat.id, int(call.data[-1]) - 1, wins])
     connect.commit()
     connect.close()
-
     await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                         reply_markup=None)
-    await call.message.answer('Уровень изменен ✅')
+    markup = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("✏️ Начать игру", callback_data='NewGame'))
+
+    await call.message.answer('Уровень изменен ✅', reply_markup=markup)
 
 
 @dp.message_handler(commands=['game'])
@@ -89,10 +99,10 @@ async def started_field(message):
     data = cursor.fetchone()
     connect.commit()
     if data is None:
-        cursor.execute(f"SELECT dif FROM id_n_dif WHERE id = {message.chat.id}")
+        cursor.execute(f"SELECT dif FROM id_n_dif_n_wins WHERE id = {message.chat.id}")
         dif_lev = cursor.fetchone()[0]
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(10 + dif_lev * 10))
+        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(15 + dif_lev * 10))
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
@@ -118,11 +128,11 @@ async def callback_game(call):
         cursor = connect.cursor()
 
         cursor.execute(f"DELETE FROM users_info WHERE id = {call.message.chat.id}")
-        cursor.execute(f"SELECT dif FROM id_n_dif WHERE id = {call.message.chat.id}")
+        cursor.execute(f"SELECT dif FROM id_n_dif_n_wins WHERE id = {call.message.chat.id}")
         dif_lev = cursor.fetchone()[0]
 
         solved_sudoku = generator_completed_sudoku()
-        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(10 + dif_lev * 10))
+        sudoku = generator_sudoku(solved_sudoku, difficulty_level=(1 + dif_lev * 10))
         starter_tab = deepcopy(sudoku)
 
         sudoku_drawer(sudoku, sudoku)
@@ -137,13 +147,6 @@ async def callback_game(call):
         connect.close()
     if call.data == 'game_False':
         await bot.send_message(call.message.chat.id, "будь осторежнее")
-    await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                        reply_markup=None)
-
-
-@dp.callback_query_handler(lambda c: c.data == "NewGame")
-async def callback_new_game(call):
-    await started_field(call.message)
     await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                         reply_markup=None)
 
@@ -247,8 +250,8 @@ async def tab_change(message):
     if user_info is not None:
         starter_tab, sudoku, last_message_id = eval(user_info[1]), eval(user_info[2]), int(user_info[3])
         text = message.text
-        if (text[0] in ascii_letters) and text[1].isdigit() and (text[2] == ' ') and text[3].isdigit() \
-                and (len(text) == 4):
+        if (len(text) == 4) and (text[0] in ascii_letters) and text[1].isdigit() and (text[2] == ' ') \
+                and text[3].isdigit():
             column = ord(text[0].lower()) - 97
             row = int(text[1]) - 1
             num = int(text[3])
@@ -271,6 +274,13 @@ async def tab_change(message):
                 cursor.execute("INSERT INTO users_info VALUES(?, ?, ?, ?);", user_info)
                 connect.commit()
                 if sudoku == sudoku_solver(starter_tab):
+                    cursor.execute(f"SELECT * FROM id_n_dif_n_wins WHERE id = {message.chat.id}")
+                    id_n_dif_n_wins = cursor.fetchone()
+                    chat_id, dif, wins = id_n_dif_n_wins[0], id_n_dif_n_wins[1], id_n_dif_n_wins[2]
+                    cursor.execute(f"DELETE FROM id_n_dif_n_wins WHERE id = {message.chat.id}")
+                    cursor.execute("INSERT INTO id_n_dif_n_wins VALUES(?, ?, ?);",
+                                   [chat_id, dif, wins + (dif + 1)])
+
                     markup = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("✏️ Начать новую игру",
                                                                                         callback_data='NewGame'))
                     await message.answer('*Победа!*', reply_markup=markup, parse_mode='Markdown')

@@ -17,17 +17,23 @@ def sudoku_checker(matrix):
 
 def generator_sudoku(completed_sudoku, difficulty_level=40):
     sudoku = deepcopy(completed_sudoku)
-    i = 0
-    while i < difficulty_level:
-        row_index = randrange(9)
-        column_index = randrange(9)
-        num = sudoku[row_index][column_index]
-        if num != 0:
-            sudoku[row_index][column_index] = 0
-            solved_sudoku = sudoku_solver(sudoku)
-            if sudoku_checker(solved_sudoku):
-                i += 1
-            else:
-                sudoku[row_index][column_index] = num
-    return sudoku
+    while True:
+        i = 0
+        j = 0
+        while i < difficulty_level:
+            row_index = randrange(9)
+            column_index = randrange(9)
+            num = sudoku[row_index][column_index]
+            if num != 0:
+                sudoku[row_index][column_index] = 0
+                solved_sudoku = sudoku_solver(sudoku)
+                if sudoku_checker(solved_sudoku):
+                    i += 1
+                else:
+                    sudoku[row_index][column_index] = num
+                    j += 1
+                    print(j)
+                    if j == difficulty_level:
+                        break
+        return sudoku
 
