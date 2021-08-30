@@ -87,6 +87,7 @@ async def callback_new_game(call):
 
 @dp.message_handler(commands=['game'])
 async def started_field(message):
+
     # this function sends starter field for sudoku
     # and saves started tab, user tab, solved tab, user id and message id in database
 
