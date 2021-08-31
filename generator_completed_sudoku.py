@@ -37,7 +37,7 @@ def swap_rows_area(matrix):
 def generator_completed_sudoku():
     n = 3
     table = [[((i * n + i // n + j) % (n * n) + 1) for j in range(n * n)] for i in range(n * n)]
-    for i in range(100):
+    for i in range(200):
         j = randrange(4)
         if j == 0:
             table = transposing(table)

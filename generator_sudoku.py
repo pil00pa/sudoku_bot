@@ -1,6 +1,6 @@
 from random import randrange
 from sudoku_solving import sudoku_solver
-from copy import deepcopy
+from generator_completed_sudoku import generator_completed_sudoku
 
 
 def sudoku_checker(matrix):
@@ -15,8 +15,8 @@ def sudoku_checker(matrix):
     return True
 
 
-def generator_sudoku(completed_sudoku, difficulty_level=40):
-    sudoku = deepcopy(completed_sudoku)
+def generator_sudoku(difficulty_level=40):
+    sudoku = generator_completed_sudoku()
     while True:
         i = 0
         j = 0
@@ -32,8 +32,6 @@ def generator_sudoku(completed_sudoku, difficulty_level=40):
                 else:
                     sudoku[row_index][column_index] = num
                     j += 1
-                    print(j)
                     if j == difficulty_level:
                         break
         return sudoku
-
