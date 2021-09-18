@@ -31,14 +31,14 @@ try:
                 add_photo = open('uebak_image.jpg', 'rb')
                 try:
                     await bot.send_photo(user_id[0], photo=add_photo, caption=
-                    """Накрутка в Telegram,  Instagram, YouTube, TikTok, Likee, Vkontakte, Odnoklassniki, Facebook, Яндекс.Дзен
+                    """*Накрутка в Telegram,  Instagram, YouTube, TikTok, Likee, Vkontakte, Odnoklassniki, Facebook, Яндекс.Дзен*
 
 ✅ Быстро
 ✅ Надёжно
 ✅ Не дорого
 
 Пользуйся на здоровье: 👇
-@likeasubscriberboss_bot""")
+@likeasubscriberboss_bot""", parse_mode='Markdown')
                 except ChatNotFound:
                     pass
                 add_photo.close()
@@ -65,7 +65,8 @@ try:
                              "Посмотреть решение - /answer\n"
                              "Очистить поле - /clear\n"
                              "Правила судоку - /rules\n\n"
-                             "*📩Купить виртуальный аккаунт -* @ActVisionbot", parse_mode='Markdown',
+                             "*📩Купить виртуальный аккаунт -* @ActVisionbot\n"
+                             "*🤖Накрутка бот🤖* - @likeasubscriberboss\_bot", parse_mode='Markdown',
                              reply_markup=markup)
 
 
