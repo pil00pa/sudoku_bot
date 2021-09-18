@@ -1,12 +1,11 @@
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.exceptions import MessageCantBeDeleted
+from aiogram.utils.exceptions import MessageCantBeDeleted, ChatNotFound
 import sqlite3
 from string import ascii_letters
 from generator_sudoku import generator_sudoku, sudoku_solver
 from matrix_filling import sudoku_drawer
 import config
-
 
 try:
     bot = Bot(config.TOKEN)
@@ -18,6 +17,31 @@ try:
         if message.from_user.id == 484620905:
             with open('users.db', 'rb') as file:
                 await bot.send_document(message.chat.id, ('users.db', file))
+
+
+    @dp.message_handler(commands=['start_mailing'])
+    async def add_sender(message):
+        if message.from_user.id == 484620905:
+            connect = sqlite3.connect('users.db')
+            cursor = connect.cursor()
+            cursor.execute("SELECT id FROM id_n_dif_n_wins")
+            data = cursor.fetchall()
+            connect.close()
+            for user_id in data:
+                add_photo = open('uebak_image.jpg', 'rb')
+                try:
+                    await bot.send_photo(user_id[0], photo=add_photo, caption=
+                    """Накрутка в Telegram,  Instagram, YouTube, TikTok, Likee, Vkontakte, Odnoklassniki, Facebook, Яндекс.Дзен
+
+✅ Быстро
+✅ Надёжно
+✅ Не дорого
+
+Пользуйся на здоровье: 👇
+@likeasubscriberboss_bot""")
+                except ChatNotFound:
+                    pass
+                add_photo.close()
 
 
     @dp.message_handler(commands=['start'])
@@ -41,13 +65,15 @@ try:
                              "Посмотреть решение - /answer\n"
                              "Очистить поле - /clear\n"
                              "Правила судоку - /rules\n\n"
-                             "*Просто кладезь полезных ботов -* @ObzorchikPlus", parse_mode='Markdown', reply_markup=markup)
+                             "*📩Купить виртуальный аккаунт -* @ActVisionbot", parse_mode='Markdown',
+                             reply_markup=markup)
 
 
     @dp.message_handler(commands=['rules'])
     async def helper(message):
-        await message.answer("От игрока требуется заполнить свободные клетки цифрами от 1 до 9 так, чтобы в каждой строке, "
-                             "в каждом столбце и в каждом из 9 квадратов 3×3 все цифры встречалась бы единожды.")
+        await message.answer("От игрока требуется заполнить свободные клетки цифрами от 1 до 9 так, чтобы в каждой "
+                             "строке, в каждом столбце и в каждом из 9 квадратов 3×3 все цифры встречалась бы "
+                             "единожды.")
 
 
     @dp.message_handler(commands=['change_level'])
@@ -65,7 +91,8 @@ try:
     async def callback_new_game(call):
         connect = sqlite3.connect('users.db')
         cursor = connect.cursor()
-        cursor.execute("UPDATE id_n_dif_n_wins SET dif == ? WHERE id == ?;", (int(call.data[-1]) - 1, call.message.chat.id))
+        cursor.execute("UPDATE id_n_dif_n_wins SET dif == ? WHERE id == ?;", (int(call.data[-1]) - 1,
+                                                                              call.message.chat.id))
         connect.commit()
         connect.close()
         await bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -212,7 +239,8 @@ try:
             with open(config.TABLE, 'rb') as file:
                 await bot.send_photo(call.message.chat.id, file)
 
-            cursor.execute("UPDATE users_info SET user_tab == ? WHERE id == ?;", (str(starter_tab), call.message.chat.id))
+            cursor.execute("UPDATE users_info SET user_tab == ? WHERE id == ?;", (str(starter_tab),
+                                                                                  call.message.chat.id))
             connect.commit()
             connect.close()
         if call.data == 'clear_False':
@@ -282,9 +310,8 @@ try:
                                    types.BotCommand("/change_level", "поменять сложность"),
                                    types.BotCommand("/clear", "очистить поле"), types.BotCommand("/answer", "решение"),
                                    types.BotCommand("/rules", "правила")])
+except Exception as ex:
+    print(ex)
 
-
-    if __name__ == '__main__':
-        executor.start_polling(dp, skip_updates=True, on_startup=set_commands)
-except Exception:
-    print(Exception)
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True, on_startup=set_commands)
