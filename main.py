@@ -39,7 +39,7 @@ try:
 
 Пользуйся на здоровье: 👇
 @likeasubscriberboss\_bot""", parse_mode='Markdown')
-                except ChatNotFound:
+                except:
                     pass
                 add_photo.close()
 
