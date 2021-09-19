@@ -38,7 +38,7 @@ try:
 ✅ Не дорого
 
 Пользуйся на здоровье: 👇
-@likeasubscriberboss_bot""", parse_mode='Markdown')
+@likeasubscriberboss\_bot""", parse_mode='Markdown')
                 except ChatNotFound:
                     pass
                 add_photo.close()
@@ -66,8 +66,8 @@ try:
                              "Очистить поле - /clear\n"
                              "Правила судоку - /rules\n\n"
                              "*📩Купить виртуальный аккаунт -* @ActVisionbot\n"
-                             "*🤖Накрутка бот🤖* - @likeasubscriberboss\_bot", parse_mode='Markdown',
-                             reply_markup=markup)
+                             "*🤖Накрутка бот🤖* - @likeasubscriberboss\_bot",
+                             parse_mode='Markdown', reply_markup=markup)
 
 
     @dp.message_handler(commands=['rules'])
