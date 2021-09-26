@@ -287,8 +287,8 @@ try:
                     if sudoku == sudoku_solver(starter_tab):
                         cursor.execute(f"SELECT dif, wins FROM id_n_dif_n_wins WHERE id = {message.chat.id}")
                         dif, wins = cursor.fetchone()
-                        cursor.execute("UPDATE id_n_dif_n_wins SET dif == ?, wins == ? WHERE id == ?;",
-                                       (dif, wins, message.chat.id))
+                        cursor.execute("UPDATE id_n_dif_n_wins SET wins == ? WHERE id == ?;",
+                                       (wins + dif + 1, message.chat.id))
 
                         markup = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton("✏️ Начать новую игру",
                                                                                             callback_data='NewGame'))
