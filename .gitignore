@@ -3,4 +3,3 @@ __pycache__
 .idea
 .env
 sudoku.jpg
-users.db
