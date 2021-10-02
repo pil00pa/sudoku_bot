@@ -48,7 +48,3 @@ def generator_completed_sudoku():
         elif j == 3:
             swap_rows_area(table)
     return table
-
-n = 3
-for i in [[((i * n + i // n + j) % (n * n) + 1) for j in range(n * n)] for i in range(n * n)]:
-    print(i)
