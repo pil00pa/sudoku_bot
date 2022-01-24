@@ -56,7 +56,7 @@ try:
                              "Поменять сложность - /change\_level\n"
                              "Посмотреть решение - /answer\n"
                              "Очистить поле - /clear\n"
-                             "Правила судоку - /rules\n\n",
+                             "Правила судоку - /rules",
                              parse_mode='Markdown', reply_markup=markup)
 
 
